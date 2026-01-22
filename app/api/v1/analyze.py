@@ -1,12 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form
 from app.services.analysis_service import preview_analysis_service
+from app.schemas.analysis import PreviewAnalysisResponse
 
 router = APIRouter(
     prefix="/analyze",
     tags=["Analysis"]
 )
 
-@router.post("/preview")
+@router.post("/preview", response_model=PreviewAnalysisResponse)
 def preview_analysis(
     file: UploadFile = File(...),
     date_column: str = Form(...),
