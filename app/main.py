@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.api.v1.upload import router as upload_router
 from app.api.v1.analyze import router as analyze_router
+from app.api.v1.columns import router as columns_router
 
 
 app = FastAPI(
@@ -11,6 +12,7 @@ app = FastAPI(
 
 app.include_router(upload_router, prefix="/api/v1")
 app.include_router(analyze_router, prefix="/api/v1")
+app.include_router(columns_router, prefix="/api/v1")
 
 
 @app.get('/')
