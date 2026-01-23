@@ -11,9 +11,16 @@ def discover_columns(df: pd.DataFrame):
         # Try datetime detection
         try:
             parsed = pd.to_datetime(series, errors="coerce")
+            # Must have majority valid date
             if parsed.notna().sum() > 0.8 * len(series):
-                date_candidates.append(column)
-                continue
+                # Exclude purely numeric columns (IDs, quantities)
+                if pd.api.types.is_numeric_dtype(series):
+                    pass
+                else:
+                    # Exclude low-variance timestamps (IDs disguised as dates)
+                    if parsed.nunique() > 10:
+                        date_candidates.append(column)
+                        continue
         except Exception:
             pass
 
