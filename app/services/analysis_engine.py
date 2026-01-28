@@ -5,10 +5,20 @@ def analyze_time_series(df: pd.DataFrame):
     Expects df with columns: ['date', 'metric']
     """
 
-    df = df.sort_values("date")
+    # 🔑 Normalize datetime → date (daily granularity)
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"]).dt.date
 
-    start_value = df["metric"].iloc[0]
-    end_value = df["metric"].iloc[-1]
+    # 🔑 Aggregate metric per day
+    daily_df = (
+        df
+        .groupby("date", as_index=False)["metric"]
+        .sum()
+        .sort_values("date")
+    )
+
+    start_value = daily_df["metric"].iloc[0]
+    end_value = daily_df["metric"].iloc[-1]
 
     # Percentage change
     if start_value == 0:
@@ -24,9 +34,9 @@ def analyze_time_series(df: pd.DataFrame):
     else:
         trend = "flat"
 
-    # Volatility (std relative to mean)
-    mean = df["metric"].mean()
-    std = df["metric"].std()
+    # Volatility
+    mean = daily_df["metric"].mean()
+    std = daily_df["metric"].std()
 
     if mean == 0:
         volatility = "low"
