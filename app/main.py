@@ -5,6 +5,7 @@ from app.api.v1.columns import router as columns_router
 from app.api.v1.quality import router as quality_router
 from app.api.v1.analysis import router as analysis_engine_router
 from app.api.v1.insights import router as insights_router
+from app.api.v1.multi_insights import router as multi_insights_router
 
 
 app = FastAPI(
@@ -19,7 +20,7 @@ app.include_router(columns_router, prefix="/api/v1")
 app.include_router(quality_router, prefix="/api/v1")
 app.include_router(analysis_engine_router, prefix="/api/v1")
 app.include_router(insights_router, prefix="/api/v1")
-
+app.include_router(multi_insights_router, prefix="/api/v1")
 
 @app.get('/')
 def read_root():
