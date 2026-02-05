@@ -40,3 +40,11 @@ def generate_insight(analysis_result: dict):
         "confidence": confidence,
         "explanation": explanation
     }
+
+def generate_multi_metric_insights(analysis_results: dict):
+    insights = {}
+
+    for metric, analysis in analysis_results.items():
+        insights[metric] = generate_insight(analysis)
+
+    return insights
