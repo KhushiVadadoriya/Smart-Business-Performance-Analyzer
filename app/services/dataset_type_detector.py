@@ -1,33 +1,32 @@
 import pandas as pd
 
-def detect_dataset_type(
-    df: pd.DataFrame,
-    date_column: str,
-    metric_columns: list[str]
-) -> str:
-    """
-    Returns:
-        'time_series' or 'snapshot'
-    """
+SUMMABLE_KEYWORDS = [
+    "quantity", "amount", "sales", "revenue", "price", "count", "units"
+]
 
-    # 1️⃣ Convert date safely
+def is_summable_metric(column_name: str) -> bool:
+    name = column_name.lower()
+    return any(k in name for k in SUMMABLE_KEYWORDS)
+
+def detect_dataset_type(df, date_column, metric_columns):
+    # 1️⃣ Date must exist
     dates = pd.to_datetime(df[date_column], errors="coerce")
 
-    total_rows = len(df)
-    unique_dates = dates.nunique()
+    # 2️⃣ EVENT TIME-SERIES OVERRIDE (CRITICAL)
+    # If any metric is summable AND date exists → event_time_series
+    for col in metric_columns:
+        if is_summable_metric(col):
+            return "event_time_series"
 
-    # 2️⃣ Check if metrics are binary / static-like
+    # 3️⃣ Snapshot signals (binary / attributes)
     binary_metrics = 0
     for col in metric_columns:
         unique_vals = df[col].dropna().unique()
         if len(unique_vals) <= 2:
             binary_metrics += 1
 
-    # 3️⃣ Heuristic rules
-    if unique_dates < total_rows * 0.5:
-        return "time_series"
+    if binary_metrics >= 1:
+        return "snapshot_entity"
 
-    if binary_metrics >= len(metric_columns) / 2:
-        return "snapshot"
-
-    return "snapshot"
+    # 4️⃣ Safe default
+    return "snapshot_entity"

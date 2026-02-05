@@ -1,11 +1,11 @@
-from app.services.category_insights import analyze_category_contribution
+# app/services/insight_engine.py
 
-def generate_insight(analysis_result: dict):
+def generate_single_insight(analysis_result: dict):
     trend = analysis_result["trend"]
     change = abs(analysis_result["change_percent"])
     volatility = analysis_result["volatility"]
 
-    # ---- SEVERITY ----
+    # Severity
     if change > 50:
         severity = "high"
     elif change > 20:
@@ -13,7 +13,7 @@ def generate_insight(analysis_result: dict):
     else:
         severity = "low"
 
-    # ---- CONFIDENCE ----
+    # Confidence
     if volatility == "low":
         confidence = 0.9
     elif volatility == "medium":
@@ -21,19 +21,19 @@ def generate_insight(analysis_result: dict):
     else:
         confidence = 0.6
 
-    # ---- SUMMARY ----
+    # Summary
     if trend == "down":
         summary = "Performance declined over the observed period."
     elif trend == "up":
         summary = "Performance improved over the observed period."
     else:
-        summary = "Performance remained relatively stable over the observed period."
+        summary = "Performance remained relatively stable."
 
-    # ---- EXPLANATION ----
+    # Explanation
     explanation = (
         f"The metric changed by {analysis_result['change_percent']}% "
         f"from {analysis_result['start_value']} to {analysis_result['end_value']}. "
-        f"Volatility during this period was classified as {volatility}."
+        f"Volatility was classified as {volatility}."
     )
 
     return {
@@ -43,10 +43,13 @@ def generate_insight(analysis_result: dict):
         "explanation": explanation
     }
 
+
 def generate_multi_metric_insights(analysis_results: dict):
     insights = {}
 
     for metric, analysis in analysis_results.items():
-        insights[metric] = generate_insight(analysis)
+        insights[metric] = generate_single_insight(analysis)
 
-    return insights
+    return {
+        "insights": insights
+    }
