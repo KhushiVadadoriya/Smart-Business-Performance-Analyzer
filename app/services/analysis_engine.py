@@ -54,3 +54,12 @@ def analyze_time_series(df: pd.DataFrame):
         "start_value": float(start_value),
         "end_value": float(end_value)
     }
+
+def analyze_multiple_metrics(df: pd.DataFrame, metrics: list[str]):
+    results = {}
+
+    for metric in metrics:
+        temp_df = df[["date", metric]].rename(columns={metric: "metric"})
+        results[metric] = analyze_time_series(temp_df)
+
+    return results
