@@ -59,7 +59,13 @@ def analyze_multiple_metrics(df: pd.DataFrame, metrics: list[str]):
     results = {}
 
     for metric in metrics:
-        temp_df = df[["date", metric]].rename(columns={metric: "metric"})
-        results[metric] = analyze_time_series(temp_df)
+        try:
+            temp_df = df[["date", metric]].rename(columns={metric: "metric"})
+            results[metric] = analyze_time_series(temp_df)
+        except Exception as e:
+            results[metric] = {
+                "error": f"Could not analyze metric: {metric}"
+            }
 
     return results
+
