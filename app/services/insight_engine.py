@@ -1,3 +1,5 @@
+from app.services.category_insights import analyze_category_contribution
+
 def generate_insight(analysis_result: dict):
     trend = analysis_result["trend"]
     change = abs(analysis_result["change_percent"])
