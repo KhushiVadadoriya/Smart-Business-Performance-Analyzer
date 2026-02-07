@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import pandas as pd
 
@@ -6,6 +5,7 @@ from app.services.dataset_type_detector import detect_dataset_type
 from app.services.analysis_engine import analyze_multiple_metrics
 from app.services.insight_engine import generate_multi_metric_insights
 from app.services.snapshot_engine import generate_snapshot_insights
+from app.services.ingestion_sources.csv_source import CSVDataSource  # ✅ V2 ingestion
 
 router = APIRouter(
     prefix="/insights",
@@ -18,9 +18,10 @@ def generate_insight_from_dataset(
     date_column: str = Form(...),
     metric_columns: str = Form(...)
 ):
-    # 1️⃣ Load CSV safely
+    # 1️⃣ Load data via unified ingestion
     try:
-        df = pd.read_csv(file.file)
+        source = CSVDataSource(file)
+        df = source.fetch()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid CSV file")
 
@@ -30,7 +31,7 @@ def generate_insight_from_dataset(
     if date_column not in df.columns:
         raise HTTPException(
             status_code=400,
-            detail=f"Date column ''{date_column}'' not found in dataset."
+            detail=f"Date column '{date_column}' not found in dataset."
         )
 
     missing = [m for m in metrics if m not in df.columns]
@@ -52,14 +53,7 @@ def generate_insight_from_dataset(
         )
 
         analysis = analyze_multiple_metrics(working_df, metrics)
-
-        response = {
-            "dataset_type": dataset_type,
-            "metrics_analyzed": metrics,
-            **generate_multi_metric_insights(analysis)
-}
-
-        return response
+        insights = generate_multi_metric_insights(analysis)
 
     elif dataset_type == "snapshot_entity":
         insights = generate_snapshot_insights(df, metrics)
@@ -70,11 +64,9 @@ def generate_insight_from_dataset(
             detail="Unsupported dataset type"
         )
 
-    response = {
+    # 5️⃣ Unified response (single return path)
+    return {
         "dataset_type": dataset_type,
         "metrics_analyzed": metrics,
-        "insights": generate_snapshot_insights(df, metrics)
+        "insights": insights
     }
-
-
-    return response
