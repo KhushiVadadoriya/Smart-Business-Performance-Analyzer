@@ -1,5 +1,8 @@
 import pandas as pd
 from fastapi import UploadFile, HTTPException
+from app.services.ingestion_sources.nosql_source import NoSQLDataSource
+from app.services.ingestion_sources.csv_source import CSVDataSource
+from app.services.ingestion_sources.sql_source import SQLDataSource
 
 def ingest_csv(file: UploadFile):
     if not file.filename.endswith(".csv"):
@@ -16,3 +19,40 @@ def ingest_csv(file: UploadFile):
         "columns": df.shape[1],
         "column_names": df.columns.tolist()
     }
+
+
+
+
+def ingest_from_source(
+    source_type: str,
+    source_config: dict
+):
+    """
+    Unified ingestion entry point (Version 2).
+    Returns a pandas DataFrame.
+    """
+
+    if source_type == "csv":
+        source = CSVDataSource(
+            file=source_config["file"]
+        )
+
+    elif source_type == "sql":
+        source = SQLDataSource(
+            connection_url=source_config["connection_url"],
+            query=source_config["query"]
+        )
+    elif source_type == "nosql":
+        source = NoSQLDataSource(
+            connection_url=source_config["connection_url"],
+            database=source_config["database"],
+            collection=source_config["collection"],
+            query=source_config.get("query"),
+            limit=source_config.get("limit", 1000)
+    )
+
+
+    else:
+        raise ValueError(f"Unsupported source type: {source_type}")
+
+    return source.fetch()
