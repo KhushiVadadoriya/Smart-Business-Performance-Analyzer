@@ -1,6 +1,5 @@
 import pandas as pd
 from fastapi import HTTPException
-from pymongo import MongoClient
 
 from .base import BaseDataSource
 
@@ -8,7 +7,6 @@ from .base import BaseDataSource
 class NoSQLDataSource(BaseDataSource):
     """
     Read-only NoSQL (MongoDB-style) data source.
-    Fetches documents and flattens them into a DataFrame.
     """
 
     def __init__(
@@ -27,6 +25,9 @@ class NoSQLDataSource(BaseDataSource):
 
     def fetch(self) -> pd.DataFrame:
         try:
+            # 🔥 Lazy import (only when actually used)
+            from pymongo import MongoClient
+
             client = MongoClient(self.connection_url)
             db = client[self.database]
             collection = db[self.collection]
@@ -40,12 +41,16 @@ class NoSQLDataSource(BaseDataSource):
                     detail="No documents found in collection."
                 )
 
-            # Remove MongoDB internal ID
             for doc in docs:
                 doc.pop("_id", None)
 
-            df = pd.json_normalize(docs)
-            return df
+            return pd.json_normalize(docs)
+
+        except ImportError:
+            raise HTTPException(
+                status_code=400,
+                detail="pymongo is not installed. Install it to use NoSQL ingestion."
+            )
 
         except Exception as e:
             raise HTTPException(
