@@ -1,0 +1,45 @@
+API - 
+{
+  "source_type": "api",
+  "source_config": {
+    "url": "http://127.0.0.1:8000/api/v1/mock/large-dataset"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["quantity", "revenue"]
+}
+
+
+CSV -
+{
+  "source_type": "csv",
+  "source_config": {
+    "file": "E:/Smart-Business-Performance-Analyzer/app/data/big_orders.csv"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["quantity", "revenue"]
+}
+
+SQL -
+{
+  "source_type": "sql",
+  "source_config": {
+    "connection_url": "sqlite:///E:/Smart-Business-Performance-Analyzer/app/data/production_test.db",
+    "query": "SELECT * FROM orders"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["quantity", "revenue"]
+}
+
+
+
+
+{
+  "source_type": "sql",
+  "source_config": {
+    "connection_url": "sqlite:///E:/Smart-Business-Performance-Analyzer/app/data/production_test.db",
+    "query": "SELECT order_date, SUM(quantity) as quantity, SUM(revenue) as revenue FROM orders GROUP BY order_date;"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["quantity", "revenue"]
+}
+

@@ -22,3 +22,46 @@ def normalize_data(df: pd.DataFrame, date_col: str, metric_col: str):
         )
 
     return normalized_df
+
+def normalize_dataset(
+    df: pd.DataFrame,
+    date_column: str,
+    metric_columns: list[str]
+):
+    if date_column not in df.columns:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Date column '{date_column}' not found"
+        )
+
+    missing = [m for m in metric_columns if m not in df.columns]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Metric columns not found: {missing}"
+        )
+
+    normalized_df = df[[date_column] + metric_columns].copy()
+
+    # Parse date
+    normalized_df[date_column] = pd.to_datetime(
+        normalized_df[date_column], errors="coerce"
+    )
+
+    # Parse metrics
+    for m in metric_columns:
+        normalized_df[m] = pd.to_numeric(
+            normalized_df[m], errors="coerce"
+        )
+
+    # Drop invalid rows
+    normalized_df = normalized_df.dropna(
+        subset=[date_column] + metric_columns
+    )
+
+    # Rename date → canonical
+    normalized_df = normalized_df.rename(
+        columns={date_column: "date"}
+    )
+
+    return normalized_df
