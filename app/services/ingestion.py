@@ -32,8 +32,9 @@ def ingest_from_source(source_type: str, source_config: dict):
 
     if source_type == "csv":
         source = CSVDataSource(
-            file=source_config["file"]
-        )
+            file=source_config.get("file"),
+            file_path=source_config.get("file_path")
+    )
 
     elif source_type == "sql":
         source = SQLDataSource(

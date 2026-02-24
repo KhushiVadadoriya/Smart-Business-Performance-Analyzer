@@ -9,7 +9,7 @@ from app.api.v1.detect import router as detect_router
 from app.api.v2.unified_ingestion import router as unified_ingestion_router
 from app.api.v1.pipeline import router as pipeline_router
 from app.api.v1.mock_api import router as mock_router
-
+from app.api.v3.intelligent_pipeline import router as v3_router
 
 
 app = FastAPI(
@@ -28,6 +28,7 @@ app.include_router(detect_router, prefix="/api/v1")
 app.include_router(unified_ingestion_router,prefix="/api/v2")
 app.include_router(pipeline_router, prefix="/api/v1")
 app.include_router(mock_router, prefix="/api/v1")
+app.include_router(v3_router, prefix="/api/v3")
 
 @app.get('/')
 def read_root():
