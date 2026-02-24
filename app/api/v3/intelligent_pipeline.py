@@ -23,5 +23,12 @@ def ingest_and_analyze_v3(request: V3Request):
     try:
         result = run_v3_pipeline(request)
         return result
+    except HTTPException:
+        raise
     except Exception as e:
+        if "entity_column is required for snapshot analysis" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail="Entity column is required for snapshot dataset."
+            )
         raise HTTPException(status_code=400, detail=str(e))

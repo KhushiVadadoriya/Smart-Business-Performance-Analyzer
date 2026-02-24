@@ -6,3 +6,5 @@ python-multipart
 sqlalchemy
 psycopg2-binary
 requests
+passlib[bcrypt]
+python-jose[cryptography]
