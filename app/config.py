@@ -2,5 +2,5 @@ import os
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./app.db"
+    "postgresql://postgres:Khushi%401806@localhost:5432/smart_analyzer"
 )

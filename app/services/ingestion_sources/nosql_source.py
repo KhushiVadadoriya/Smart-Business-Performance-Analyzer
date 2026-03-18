@@ -25,13 +25,31 @@ class NoSQLDataSource(BaseDataSource):
 
     def fetch(self) -> pd.DataFrame:
         try:
-            # 🔥 Lazy import (only when actually used)
-            from pymongo import MongoClient
+            # ✅ Proper import with debug clarity
+            try:
+                from pymongo import MongoClient
+            except ImportError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"pymongo import failed: {str(e)}. Install using: pip install pymongo"
+                )
 
+            # ✅ Connect to MongoDB
             client = MongoClient(self.connection_url)
+
+            # Optional: test connection
+            try:
+                client.admin.command("ping")
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"MongoDB connection failed: {str(e)}"
+                )
+
             db = client[self.database]
             collection = db[self.collection]
 
+            # ✅ Fetch documents
             cursor = collection.find(self.query).limit(self.limit)
             docs = list(cursor)
 
@@ -41,16 +59,23 @@ class NoSQLDataSource(BaseDataSource):
                     detail="No documents found in collection."
                 )
 
+            # ✅ Remove MongoDB internal field
             for doc in docs:
                 doc.pop("_id", None)
 
-            return pd.json_normalize(docs)
+            # ✅ Convert to DataFrame
+            df = pd.json_normalize(docs)
 
-        except ImportError:
-            raise HTTPException(
-                status_code=400,
-                detail="pymongo is not installed. Install it to use NoSQL ingestion."
-            )
+            if df.empty:
+                raise HTTPException(
+                    status_code=400,
+                    detail="DataFrame is empty after normalization."
+                )
+
+            return df
+
+        except HTTPException:
+            raise
 
         except Exception as e:
             raise HTTPException(

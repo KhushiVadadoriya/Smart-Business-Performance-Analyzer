@@ -42,4 +42,56 @@ SQL -
   "date_column": "order_date",
   "metric_columns": ["quantity", "revenue"]
 }
+ 
+Version 3
+csv
 
+{
+  "source_type": "csv",
+  "source_config": {
+    "file_path": "app/data/Orders.csv"
+  },
+  "date_column": "Date and time of purchase",
+  "metric_columns": ["Quantity"]
+}
+
+
+{
+  "source_type": "csv",
+  "source_config": {
+    "file_path": "app/data/big_orders.csv"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["revenue","quantity"]
+}
+
+snapshot
+{
+  "source_type": "csv",
+  "source_config": {
+    "file_path": "app/data/snapshot_200_columns.csv"
+  },
+  "date_column": "report_date",
+  "metric_columns": ["metric_1", "metric_2"],
+  "entity_column": "entity_id"
+}
+
+
+SQL
+
+{
+  "source_type": "sql",
+  "source_config": {
+    "connection_url": "sqlite:///app/data/production_test.db",
+    "query": "SELECT * FROM orders"
+  },
+  "date_column": "order_date",
+  "metric_columns": ["revenue", "quantity"]
+}
+
+
+
+changes needed to be done
+-change to postrege
+-add some sort of actionable step for business
+-fix the api and test NoSQL data

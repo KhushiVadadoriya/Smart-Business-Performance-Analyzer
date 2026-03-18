@@ -42,6 +42,10 @@ class APIDataSource(BaseDataSource):
 
             data = response.json()
 
+            # Unwrap standardized response envelope {"success": true, "data": [...]}
+            if isinstance(data, dict) and data.get("success") is True and "data" in data:
+                data = data["data"]
+
             # Handle APIs that wrap data inside a key
             if self.data_key:
                 data = data.get(self.data_key, [])
