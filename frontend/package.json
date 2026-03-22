@@ -1,0 +1,47 @@
+{
+  "name": "smart-business-performance-analyzer",
+  "version": "1.0.0",
+  "description": "Smart Business Performance Analyzer is a FastAPI-based analytics service that ingests data from files, databases, APIs, and NoSQL sources, then generates business insights for time-series and snapshot/entity datasets.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KhushiVadadoriya/Smart-Business-Performance-Analyzer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KhushiVadadoriya/Smart-Business-Performance-Analyzer/issues"
+  },
+  "homepage": "https://github.com/KhushiVadadoriya/Smart-Business-Performance-Analyzer#readme",
+  "dependencies": {
+    "@react-oauth/google": "^0.13.4",
+    "axios": "^1.13.6",
+    "clsx": "^2.1.1",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
+    "recharts": "^3.8.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1"
+  }
+}

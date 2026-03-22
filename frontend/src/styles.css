@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Option B: Clean Minimalist Enterprise (Light Mode Defaults) */
+  --sbpa-primary: #4f46e5;
+  --sbpa-dark: #0f172a;
+  --sbpa-bg: #f8fafc;
+  --sbpa-card: #ffffff;
+  --sbpa-accent: #e2e8f0;
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark Mode Counters */
+  --sbpa-primary: #818cf8;
+  --sbpa-dark: #f8fafc;
+  --sbpa-bg: #0f172a;
+  --sbpa-card: #1e293b;
+  --sbpa-accent: #334155;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--sbpa-bg);
+  color: var(--sbpa-dark);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
