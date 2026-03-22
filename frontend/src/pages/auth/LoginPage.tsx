@@ -3,10 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { GoogleLogin } from "@react-oauth/google";
 
-import { login, googleLogin } from "../../api/auth";
+import { getUserProfile, login, googleLogin, type UserProfile } from "../../api/auth";
 import { Button } from "../../components/Button";
 import { useAuthStore } from "../../store/authStore";
 import { AuthShell } from "./AuthShell";
+
+function needsOnboarding(profile: UserProfile) {
+  return !profile.business_type?.trim();
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -39,6 +43,20 @@ export function LoginPage() {
     try {
       const res = await login(email.trim(), password);
       setSession({ token: res.access_token, userEmail: email.trim() });
+
+      try {
+        const profile = await getUserProfile();
+        setSession({ token: res.access_token, user: profile });
+
+        if (needsOnboarding(profile)) {
+          toast.info("Complete your profile to continue.");
+          navigate("/profile?onboarding=1", { replace: true });
+          return;
+        }
+      } catch {
+        // Keep existing behavior if profile fetch fails.
+      }
+
       toast.success("Logged in.");
       navigate(from, { replace: true });
     } finally {
@@ -106,6 +124,20 @@ export function LoginPage() {
 
               const res = await googleLogin(credentialResponse.credential);
               setSession({ token: res.access_token, userEmail });
+
+              try {
+                const profile = await getUserProfile();
+                setSession({ token: res.access_token, user: profile });
+
+                if (needsOnboarding(profile)) {
+                  toast.info("Complete your profile to continue.");
+                  navigate("/profile?onboarding=1", { replace: true });
+                  return;
+                }
+              } catch {
+                // Keep existing behavior if profile fetch fails.
+              }
+
               toast.success("Successfully logged in.");
               navigate(from, { replace: true });
             } catch (err: any) {

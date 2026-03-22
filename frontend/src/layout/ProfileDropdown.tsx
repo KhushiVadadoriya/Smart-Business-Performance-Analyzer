@@ -45,6 +45,13 @@ export function ProfileDropdown() {
       {open ? (
         <div className="absolute right-0 mt-2 w-52 z-50 rounded-2xl border border-black/10 dark:border-white/10 bg-[var(--sbpa-card)] p-2 shadow-lg">
           <Link
+            to="/profile"
+            onClick={() => setOpen(false)}
+            className="block rounded-xl px-3 py-2 text-sm font-semibold text-[var(--sbpa-dark)] opacity-80 hover:bg-[var(--sbpa-dark)]/5 dark:hover:bg-[var(--sbpa-card)]/5"
+          >
+            My Profile
+          </Link>
+          <Link
             to="/about"
             onClick={() => setOpen(false)}
             className="block rounded-xl px-3 py-2 text-sm font-semibold text-[var(--sbpa-dark)] opacity-80 hover:bg-[var(--sbpa-dark)]/5 dark:hover:bg-[var(--sbpa-card)]/5"

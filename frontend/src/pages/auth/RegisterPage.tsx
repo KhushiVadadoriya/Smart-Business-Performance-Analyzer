@@ -3,16 +3,30 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { GoogleLogin } from "@react-oauth/google";
 
-import { register, googleLogin } from "../../api/auth";
+import { getUserProfile, register, googleLogin, type UserProfile } from "../../api/auth";
 import { Button } from "../../components/Button";
 import { useAuthStore } from "../../store/authStore";
 import { AuthShell } from "./AuthShell";
+
+const BUSINESS_TYPES = [
+  "E-Commerce",
+  "SaaS",
+  "Restaurant/Cafe",
+  "Agency/Service",
+  "Other",
+] as const;
+
+function needsOnboarding(profile: UserProfile) {
+  return !profile.business_type?.trim();
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
@@ -30,7 +44,7 @@ export function RegisterPage() {
 
     setSubmitting(true);
     try {
-      await register(email.trim(), password);
+      await register(email.trim(), password, businessName, businessType);
       toast.success("Registered. You can now log in.");
       navigate("/login", { replace: true });
     } finally {
@@ -74,6 +88,40 @@ export function RegisterPage() {
           ) : null}
         </div>
 
+        <div className="rounded-2xl border border-[var(--sbpa-dark)]/10 bg-[var(--sbpa-card)]/50 p-3">
+          <div className="text-sm font-bold text-[var(--sbpa-dark)]">Business Details (Optional)</div>
+          <div className="mt-1 text-xs text-[var(--sbpa-dark)]/60">
+            These help personalize analysis recommendations.
+          </div>
+
+          <div className="mt-3">
+            <label className="text-sm font-semibold text-[var(--sbpa-dark)]/70">Business Name</label>
+            <input
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              type="text"
+              className="mt-1 w-full rounded-2xl border border-[var(--sbpa-dark)]/10 bg-[var(--sbpa-card)] px-3 py-2 text-sm outline-none transition focus:border-[var(--sbpa-primary)]"
+              placeholder="Acme Foods"
+            />
+          </div>
+
+          <div className="mt-3">
+            <label className="text-sm font-semibold text-[var(--sbpa-dark)]/70">Business Type</label>
+            <select
+              value={businessType}
+              onChange={(e) => setBusinessType(e.target.value)}
+              className="mt-1 w-full rounded-2xl border border-[var(--sbpa-dark)]/10 bg-[var(--sbpa-card)] px-3 py-2 text-sm outline-none transition focus:border-[var(--sbpa-primary)]"
+            >
+              <option value="">Select business type</option>
+              {BUSINESS_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <Button disabled={submitting} type="submit" className="w-full">
           {submitting ? "Creating..." : "Register"}
         </Button>
@@ -98,6 +146,20 @@ export function RegisterPage() {
 
               const res = await googleLogin(credentialResponse.credential);
               setSession({ token: res.access_token, userEmail });
+
+              try {
+                const profile = await getUserProfile();
+                setSession({ token: res.access_token, user: profile });
+
+                if (needsOnboarding(profile)) {
+                  toast.info("Complete your profile to continue.");
+                  navigate("/profile?onboarding=1", { replace: true });
+                  return;
+                }
+              } catch {
+                // Keep existing behavior if profile fetch fails.
+              }
+
               toast.success("Successfully registered via Google.");
               navigate("/", { replace: true });
             } catch (err: any) {

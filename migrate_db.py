@@ -22,6 +22,30 @@ def run_migration():
         except Exception as e:
             print(f"hashed_password nullable mod failed: {e}")
 
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(255);"))
+            print("Added full_name column.")
+        except Exception as e:
+            print(f"full_name might already exist: {e}")
+
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN profile_picture_url VARCHAR(1024);"))
+            print("Added profile_picture_url column.")
+        except Exception as e:
+            print(f"profile_picture_url might already exist: {e}")
+
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN business_name VARCHAR(255);"))
+            print("Added business_name column.")
+        except Exception as e:
+            print(f"business_name might already exist: {e}")
+
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN business_type VARCHAR(100);"))
+            print("Added business_type column.")
+        except Exception as e:
+            print(f"business_type might already exist: {e}")
+
 if __name__ == "__main__":
     run_migration()
     print("Migration script executed!")

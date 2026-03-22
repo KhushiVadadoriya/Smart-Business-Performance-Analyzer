@@ -11,4 +11,11 @@ class User(Base):
     hashed_password = Column(String(255), nullable=True)
     auth_provider = Column(String(50), default="local", nullable=False)
     google_id = Column(String(255), unique=True, index=True, nullable=True)
+    
+    # Profile & Business Information (Nullable)
+    full_name = Column(String(255), nullable=True)
+    profile_picture_url = Column(String(1024), nullable=True)
+    business_name = Column(String(255), nullable=True)
+    business_type = Column(String(100), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

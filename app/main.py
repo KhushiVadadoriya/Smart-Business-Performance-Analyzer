@@ -1,7 +1,9 @@
 import logging
+from pathlib import Path
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.api.v1.upload import router as upload_router
 from app.api.v1.analyze import router as analyze_router
 from app.api.v1.columns import router as columns_router
@@ -36,6 +38,10 @@ app.add_middleware(
 
 app.add_middleware(StandardizedResponseMiddleware)
 register_exception_handlers(app)
+
+uploads_dir = Path(__file__).resolve().parents[1] / "uploads"
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 @app.on_event("startup")
