@@ -45,7 +45,26 @@ def analyze_snapshot_v3(df: pd.DataFrame, metric: str, entity_column: str):
     # Spread Score (normalized variance)
     spread_score = variance / (mean + 1e-6)
 
+    if concentration_ratio > 0.5:
+        summary = f"Highly concentrated dataset. Top entity '{top_entity}' dominates."
+    elif concentration_ratio > 0.3:
+        summary = f"Moderately concentrated dataset led by '{top_entity}'."
+    else:
+        summary = "Values are fairly distributed across entities."
+        
+    explanation = f"'{top_entity}' contributed the highest value, while '{bottom_entity}' contributed the lowest. The top 20% of entities account for {round(concentration_ratio * 100, 1)}% of the total metric."
+
+    # Distribution Data (Top 10 + Other) for Pie Charts
+    top_dist = grouped.head(10)
+    distribution_data = [{"name": str(idx), "value": float(val)} for idx, val in top_dist.items()]
+    if len(grouped) > 10:
+        other_sum = float(grouped.iloc[10:].sum())
+        if other_sum > 0:
+            distribution_data.append({"name": "Other", "value": other_sum})
+
     return {
+        "summary": summary,
+        "explanation": explanation,
         "mean": round(float(mean), 2),
         "median": round(float(median), 2),
         "variance_level": variance_level,
@@ -54,7 +73,8 @@ def analyze_snapshot_v3(df: pd.DataFrame, metric: str, entity_column: str):
         "bottom_entity": bottom_entity,
         "concentration_ratio": round(float(concentration_ratio), 3),
         "dominance_index": round(float(dominance_index), 3),
-        "spread_score": round(float(spread_score), 3)
+        "spread_score": round(float(spread_score), 3),
+        "distribution_data": distribution_data
     }
 
 def analyze_multiple_snapshot_v3(df: pd.DataFrame, metrics: list[str], entity_column: str):

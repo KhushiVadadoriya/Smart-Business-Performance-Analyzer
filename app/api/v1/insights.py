@@ -44,6 +44,8 @@ def generate_insight_from_dataset(
     # 3️⃣ Detect dataset type
     dataset_type = detect_dataset_type(df, date_column, metrics)
 
+    analysis_metadata = {}
+
     # 4️⃣ Route intelligently
     if dataset_type == "event_time_series":
         df[date_column] = pd.to_datetime(df[date_column], errors="coerce")
@@ -52,8 +54,8 @@ def generate_insight_from_dataset(
             columns={date_column: "date"}
         )
 
-        analysis = analyze_multiple_metrics(working_df, metrics)
-        insights = generate_multi_metric_insights(analysis)
+        analysis_metadata = analyze_multiple_metrics(working_df, metrics)
+        insights = generate_multi_metric_insights(analysis_metadata)
 
     elif dataset_type == "snapshot_entity":
         insights = generate_snapshot_insights(df, metrics)
@@ -68,5 +70,6 @@ def generate_insight_from_dataset(
     return {
         "dataset_type": dataset_type,
         "metrics_analyzed": metrics,
+        "analysis_metadata": analysis_metadata,
         "insights": insights
     }
