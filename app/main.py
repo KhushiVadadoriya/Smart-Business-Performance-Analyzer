@@ -73,3 +73,4 @@ def read_root():
         'Smart Business Performance Analyzer is running successfully!'
     }
 
+# Backend reload fixed

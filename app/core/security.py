@@ -16,16 +16,29 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-secret-key-in-production")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from fastapi.security import OAuth2PasswordBearer
+import bcrypt
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, hashed_password: Optional[str]) -> bool:
+    if not hashed_password:
+        return False
+    # Bcrypt strictly enforces a 72 byte limit. 
+    # Return False gracefully instead of crashing if a browser autofills a massive token.
+    if len(plain_password.encode("utf-8")) > 72:
+        return False
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except Exception:
+        # Invalid hash format etc.
+        return False
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password is too long (maximum 72 bytes).")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_access_token(subject: str) -> str:

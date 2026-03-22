@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.auth.schemas import RegisterRequest
-from app.auth.utils import login_user, register_user
+from app.auth.schemas import RegisterRequest, GoogleLoginRequest
+from app.auth.utils import login_user, register_user, authenticate_google_user
 from app.database import get_db
 
 # ✅ DEFINE ROUTER FIRST
@@ -40,6 +40,21 @@ def login(
             detail=str(exc),
         )
 
+    return {
+        "success": True,
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
+
+@router.post("/google")
+def google_login(payload: GoogleLoginRequest, db: Session = Depends(get_db)):
+    try:
+        access_token = authenticate_google_user(db, payload.token)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc)
+        )
     return {
         "success": True,
         "access_token": access_token,
