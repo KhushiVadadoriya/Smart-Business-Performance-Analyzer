@@ -5,6 +5,7 @@ numpy
 python-multipart
 sqlalchemy
 psycopg2-binary
+pymongo
 requests
 google-auth
 passlib[bcrypt]

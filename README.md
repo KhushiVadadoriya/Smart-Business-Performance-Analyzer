@@ -1,84 +1,147 @@
 # Smart Business Performance Analyzer
 
-Smart Business Performance Analyzer is a FastAPI-based analytics service that ingests data from files, databases, APIs, and NoSQL sources, then generates business insights for time-series and snapshot/entity datasets.
+Smart Business Performance Analyzer is a full-stack analytics platform that ingests business data from files, databases, APIs, and NoSQL sources, then turns that data into structured insights, summaries, and visual analysis.
 
-## Features
+## Overview
 
-- Multi-source ingestion (`csv`, `sql`, `api`, `nosql`)
-- Dataset-type detection (`event_time_series` or `snapshot_entity`)
-- Multi-metric insight generation
-- Versioned APIs (`v1`, `v2`, `v3`)
-- JWT authentication for protected versions (`v2`, `v3`)
-- Standardized success/error response wrapping for `/api/v1`, `/api/v2`, `/api/v3`
+The project combines a FastAPI backend with a React + Vite frontend. The backend provides versioned APIs for upload, discovery, quality checks, analysis, and authentication. The frontend provides a guided analysis workflow, dashboard, history, profile management, and protected routes for signed-in users.
+
+## Key Capabilities
+
+- Multi-source ingestion from CSV, SQL, API, and NoSQL inputs
+- Guided step-by-step analysis flow in the frontend
+- Automatic dataset type detection for time series and snapshot/entity-style data
+- Data quality checks and column discovery helpers
+- Insight generation across one or many metrics
+- Versioned backend APIs for public and authenticated workflows
+- JWT-based authentication with optional Google sign-in support
+- Profile management, including profile picture upload
+- Standardized API success and error responses
 
 ## Tech Stack
+
+Backend:
 
 - FastAPI
 - SQLAlchemy
 - PostgreSQL
-- Pandas, NumPy
-- Passlib + JWT (`python-jose`)
+- Pandas and NumPy
+- Passlib with bcrypt
+- python-jose for JWT handling
+- Requests and python-multipart
 
-## Project Structure (High Level)
+Frontend:
+
+- React 19
+- Vite 8
+- TypeScript
+- React Router
+- Zustand
+- Axios
+- Recharts
+- Sonner
+- Tailwind CSS v4
+
+## Repository Layout
 
 ```text
-app/
-	main.py
-	config.py
-	database.py
-	auth/
-	core/
-	api/
-		v1/
-		v2/
-		v3/
-	services/
-	schemas/
+app/                    FastAPI backend application
+auth/                   Authentication models, routes, schemas, helpers
+core/                   Shared error handling and security utilities
+services/               Analysis, ingestion, normalization, and orchestration logic
+data/                   Sample CSV files and notebook assets
+frontend/               React + Vite client application
+uploads/                Generated uploads and profile pictures
+requirements.txt        Python dependencies
+frontend/package.json   Frontend dependencies and scripts
+README.md               Project documentation
 ```
 
-## Installation
+## Prerequisites
 
-1. Create and activate a virtual environment.
-2. Install dependencies:
+- Python 3.10+ recommended
+- Node.js 18+ recommended
+- PostgreSQL for the default backend configuration
+- npm or another Node package manager
+
+## Setup
+
+### 1. Backend
+
+Create and activate a virtual environment, then install the Python dependencies:
 
 ```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
+
+### 2. Frontend
+
+Install the frontend dependencies from the `frontend` folder:
+
+```bash
+cd frontend
+npm install
 ```
 
 ## Environment Variables
 
-Set these before running the app (optional defaults exist for JWT and DB):
+Backend variables:
 
-- `DATABASE_URL`
-	- Default: `postgresql://postgres:Khushi%401806@localhost:5432/smart_analyzer`
-- `JWT_SECRET_KEY`
-	- Default: `change-this-secret-key-in-production`
-- `JWT_ALGORITHM`
-	- Default: `HS256`
-- `JWT_EXPIRE_MINUTES`
-	- Default: `60`
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:Khushi%401806@localhost:5432/smart_analyzer` |
+| `JWT_SECRET_KEY` | JWT signing secret | `change-this-secret-key-in-production` |
+| `JWT_ALGORITHM` | JWT signing algorithm | `HS256` |
+| `JWT_EXPIRE_MINUTES` | Access-token lifetime in minutes | `60` |
 
-## Run Server
+Frontend variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_BASE_URL` | Optional backend base URL for the API client |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID for the login flow |
+
+If `VITE_API_BASE_URL` is not set, the frontend uses a relative base URL.
+
+## Run Locally
+
+### Backend
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-- Base URL: `http://127.0.0.1:8000`
-- Swagger UI: `http://127.0.0.1:8000/docs`
+Default backend URLs:
 
-## Authentication Flow
+- API root: `http://127.0.0.1:8000`
+- OpenAPI docs: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+
+### Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+The Vite dev server typically runs at `http://localhost:5173`.
+
+## Authentication
+
+The backend exposes username/password auth, Google login, and profile endpoints under `/auth`.
 
 ### Register
 
 `POST /auth/register`
 
-Request (JSON):
+Request body:
 
 ```json
 {
-	"email": "user@example.com",
-	"password": "MySecurePass123"
+  "email": "user@example.com",
+  "password": "MySecurePass123"
 }
 ```
 
@@ -86,7 +149,7 @@ Response:
 
 ```json
 {
-	"message": "User registered successfully."
+  "message": "User registered successfully."
 }
 ```
 
@@ -94,14 +157,9 @@ Response:
 
 `POST /auth/login`
 
-Request format:
+This endpoint uses `application/x-www-form-urlencoded` with the fields `username` and `password`.
 
-- Content-Type: `application/x-www-form-urlencoded`
-- Fields:
-	- `username` (email)
-	- `password`
-
-Example:
+Example payload:
 
 ```text
 username=user@example.com&password=MySecurePass123
@@ -111,370 +169,101 @@ Response:
 
 ```json
 {
-	"success": true,
-	"access_token": "<JWT_TOKEN>",
-	"token_type": "bearer"
+  "success": true,
+  "access_token": "<JWT_TOKEN>",
+  "token_type": "bearer"
 }
 ```
 
-### Where to send token
+### Google Login
 
-Protected endpoints (`/api/v2/*`, `/api/v3/*`) require:
+`POST /auth/google`
+
+Send the Google token in the request body. The frontend uses `@react-oauth/google` for this flow.
+
+### Protected Requests
+
+Authenticated endpoints require this header:
 
 ```http
 Authorization: Bearer <JWT_TOKEN>
 ```
 
-### Token expiry behavior
+Protected API groups in the current implementation:
 
-- Access token expiry is controlled by `JWT_EXPIRE_MINUTES`.
-- Default expiry is **60 minutes**.
-- Expired/invalid token returns `401` with detail: `Could not validate credentials`.
+- `/api/v2/*`
+- `/api/v3/*`
+- `/auth/profile`
+- `/auth/profile/picture`
+- `/auth/profile` update route
 
-## Response Standardization
+## Analysis Workflow
 
-For successful API calls under versioned paths (`/api/v1`, `/api/v2`, `/api/v3`), responses are wrapped as:
+The frontend uses a staged analysis pipeline that guides users through the following steps:
 
-```json
-{
-	"success": true,
-	"version": "v1",
-	"data": { "...": "..." }
-}
-```
+1. Choose a data source
+2. Upload or connect the source
+3. Select relevant columns
+4. Review data understanding
+5. Check data quality
+6. Run analysis
+7. Generate insights
+8. Review the final summary
 
-If an endpoint already returns `{ "success": true, "data": ... }`, it is not double-wrapped.
+The dashboard also keeps recent analysis history and provides a quick restart path for new runs.
 
-## Error Response Format
+## API Overview
 
-Custom global error shape is used:
-
-```json
-{
-	"success": false,
-	"detail": "Error message"
-}
-```
-
-Examples:
-
-- Invalid credentials:
-
-```json
-{
-	"success": false,
-	"detail": "Invalid email or password."
-}
-```
-
-- Token validation failure:
-
-```json
-{
-	"success": false,
-	"detail": "Could not validate credentials"
-}
-```
-
-- Validation failure (HTTP 422):
-
-```json
-{
-	"success": false,
-	"detail": "field_name: validation_message"
-}
-```
-
-## API Endpoints (Version-wise)
-
----
-
-### V1 (Public)
-
-Base prefix: `/api/v1`
-
-#### 1) Upload CSV
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/upload/csv`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-- **Response data**:
-
-```json
-{
-	"filename": "orders.csv",
-	"rows": 1000,
-	"columns": 8,
-	"column_names": ["order_date", "revenue", "region"]
-}
-```
-
-#### 2) Analyze Preview
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/analyze/preview`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-	- `date_column`: string
-	- `metric_column`: string
-- **Response data**:
-
-```json
-{
-	"preview": [{"order_date": "2024-01-01", "revenue": 1000}],
-	"total_rows": 1000
-}
-```
-
-#### 3) Discover Columns
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/columns/discover`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-- **Response data**:
-
-```json
-{
-	"date_candidates": ["order_date"],
-	"metric_candidates": ["revenue", "profit"],
-	"categorical_candidates": ["region", "category"]
-}
-```
-
-#### 4) Data Quality
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/quality/assess`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-- **Response data**:
-
-```json
-{
-	"total_rows": 1000,
-	"null_counts": {"revenue": 0},
-	"duplicate_rows": 2,
-	"rows_with_any_null": 5,
-	"usable_rows": 995,
-	"completeness_ratio": 0.995
-}
-```
-
-#### 5) Analysis Engine (Single Metric)
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/analysis/run`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-	- `date_column`: string
-	- `metric_column`: string
-- **Response data**:
-
-```json
-{
-	"trend": "up",
-	"change_percent": 14.2,
-	"volatility": "low",
-	"start_value": 100.0,
-	"end_value": 114.2
-}
-```
-
-#### 6) Insights Generation
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/insights/generate`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-	- `date_column`: string
-	- `metric_columns`: comma-separated string (example: `revenue,profit`)
-- **Response data**:
-
-```json
-{
-	"dataset_type": "event_time_series",
-	"metrics_analyzed": ["revenue", "profit"],
-	"insights": {
-		"revenue": {"summary": "...", "severity": "...", "confidence": 0.82, "explanation": "..."}
-	}
-}
-```
-
-#### 7) Dataset Type Detection
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/detect/type`
-- **Body**: `multipart/form-data`
-	- `file`: CSV file
-	- `date_column`: string
-	- `metric_columns`: comma-separated string
-- **Response data**:
-
-```json
-{
-	"dataset_type": "event_time_series",
-	"reasoning": {
-		"rows": 1000,
-		"unique_dates": 365,
-		"metrics_checked": ["revenue", "profit"]
-	}
-}
-```
-
-#### 8) Unified Pipeline
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v1/pipeline/run`
-- **Body**: JSON
-
-```json
-{
-	"source_type": "csv",
-	"source_config": {"file_path": "app/data/orders.csv"},
-	"date_column": "order_date",
-	"metric_columns": ["revenue", "profit"]
-}
-```
-
-- **Response data**:
-
-```json
-{
-	"source_type": "csv",
-	"dataset_type": "event_time_series",
-	"metrics_analyzed": ["revenue", "profit"],
-	"insights": {"revenue": {"summary": "..."}}
-}
-```
-
-#### 9) Mock Data Endpoint
-
-- **Method**: `GET`
-- **Endpoint**: `/api/v1/mock-api`
-- **Query Params**: None
-- **Response data**: list of generated rows
-
-```json
-[
-	{"order_date": "2024-01-01T00:00:00", "revenue": 742},
-	{"order_date": "2024-01-02T00:00:00", "revenue": 318}
-]
-```
-
----
-
-### V2 (Protected)
-
-Base prefix: `/api/v2`
-
-#### 1) Unified Ingestion + Analyze
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v2/ingest-and-analyze/`
-- **Auth**: Bearer token required
-- **Body**: JSON
-
-```json
-{
-	"source_type": "sql",
-	"source_config": {"query": "SELECT * FROM orders"},
-	"date_column": "order_date",
-	"metric_columns": ["revenue", "profit"]
-}
-```
-
-- **Response data**:
-
-```json
-{
-	"version": "v2",
-	"source_type": "sql",
-	"dataset_type": "event_time_series",
-	"metrics_analyzed": ["revenue", "profit"],
-	"insights": {"revenue": {"summary": "..."}}
-}
-```
-
----
-
-### V3 (Protected)
-
-Base prefix: `/api/v3`
-
-#### 1) Intelligent Ingestion + Analyze
-
-- **Method**: `POST`
-- **Endpoint**: `/api/v3/ingest-and-analyze`
-- **Auth**: Bearer token required
-- **Body**: JSON
-
-```json
-{
-	"source_type": "csv",
-	"source_config": {"file_path": "app/data/orders.csv"},
-	"date_column": "order_date",
-	"metric_columns": ["revenue", "profit"],
-	"entity_column": "region"
-}
-```
-
-`entity_column` is optional in request, but required for snapshot analysis.
-
-- **Response data**:
-
-```json
-{
-	"version": "v3",
-	"dataset_type": "event_time_series",
-	"metrics_analyzed": ["revenue", "profit"],
-	"analysis_metadata": {
-		"revenue": {
-			"trend": "up",
-			"slope": 1.234,
-			"trend_strength": 0.012,
-			"change_percent": 12.4,
-			"volatility_score": 0.21,
-			"anomaly_count": 3,
-			"data_points": 365,
-			"min_value": 100.0,
-			"max_value": 900.0,
-			"start_value": 100.0,
-			"end_value": 112.4
-		}
-	},
-	"executive_summary": {
-		"overall_health": "growth",
-		"health_score": 78,
-		"risk_level": "medium",
-		"stability": "moderate",
-		"confidence_score": 0.82,
-		"drivers": {
-			"trend_strength": 1.234,
-			"average_change_percent": 12.4,
-			"volatility_level": 0.21,
-			"anomaly_pressure": 3
-		}
-	},
-	"execution_time_ms": 145.6
-}
-```
-
-## Root Health Endpoint
+### Health
 
 `GET /`
 
-Response:
+Returns a simple success payload confirming that the backend is running.
 
-```json
-{
-	"Smart Business Performance Analyzer is running successfully!"
-}
-```
+### V1 Public APIs
+
+Base prefix: `/api/v1`
+
+Main endpoints include:
+
+- CSV upload
+- preview analysis
+- column discovery
+- data quality checks
+- single-metric analysis
+- insights generation
+- dataset type detection
+- unified pipeline execution
+- mock data generation
+
+These endpoints are public in the current implementation.
+
+### V2 Protected APIs
+
+Base prefix: `/api/v2`
+
+- Unified ingestion and analysis
+- Bearer token required
+
+### V3 Protected APIs
+
+Base prefix: `/api/v3`
+
+- Intelligent ingestion and analysis
+- Bearer token required
+- Supports entity-aware analysis for snapshot-style workflows
+
+## Sample Data
+
+The repository includes sample datasets under `data/`, which can be used to test ingestion and analysis flows quickly.
 
 ## Notes
 
-- CORS currently allows `http://localhost:5173`.
-- V1 endpoints are public by design in current implementation.
-- V2 and V3 endpoints are protected with `Depends(get_current_user)`.
+- CORS is currently configured for `http://localhost:5173`.
+- The backend automatically creates the uploads directory and serves it statically.
+- JWT expiry is controlled by `JWT_EXPIRE_MINUTES`.
+- Uploaded profile pictures are stored under `uploads/profile_pictures/`.
+
+## Verification
+
+If you want to confirm the app is wired correctly, start the backend and frontend, then open the dashboard, sign in, and run a sample analysis using one of the CSV files in `data/`.
