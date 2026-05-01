@@ -36,7 +36,13 @@ def authenticate_google_user(db: Session, token: str) -> str:
     try:
         # Verify the token
         client_id = os.getenv("VITE_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID")
-        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
+        clock_skew_in_seconds = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "120"))
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            google_requests.Request(),
+            client_id,
+            clock_skew_in_seconds=clock_skew_in_seconds,
+        )
 
         email = idinfo.get("email")
         google_id = idinfo.get("sub")
