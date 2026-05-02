@@ -28,10 +28,10 @@ def generate_executive_summary_v3(dataset_type: str, analysis_metadata: dict):
             anomaly_counts.append(data.get("anomaly_count", 0))
             change_percents.append(data.get("change_percent", 0))
 
-        avg_slope = np.mean(slopes)
-        avg_volatility = np.mean(volatility_scores)
+        avg_slope = float(np.mean(slopes)) if len(slopes) > 0 else 0.0
+        avg_volatility = float(np.mean(volatility_scores)) if len(volatility_scores) > 0 else 0.0
         total_anomalies = sum(anomaly_counts)
-        avg_change = np.mean(change_percents)
+        avg_change = float(np.mean(change_percents)) if len(change_percents) > 0 else 0.0
 
         # 🔹 Health Score (0–100)
         health_score = 70
@@ -93,8 +93,8 @@ def generate_executive_summary_v3(dataset_type: str, analysis_metadata: dict):
             concentration_scores.append(data.get("concentration_ratio", 0))
             dominance_scores.append(data.get("dominance_index", 0))
 
-        avg_concentration = np.mean(concentration_scores)
-        avg_dominance = np.mean(dominance_scores)
+        avg_concentration = float(np.mean(concentration_scores)) if len(concentration_scores) > 0 else 0.0
+        avg_dominance = float(np.mean(dominance_scores)) if len(dominance_scores) > 0 else 0.0
 
         # 🔹 Health Score
         health_score = 80

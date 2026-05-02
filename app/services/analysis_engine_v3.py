@@ -25,6 +25,10 @@ def analyze_time_series_v3(df: pd.DataFrame):
     df = df.drop(columns=["datetime_col"])
 
     # Aggregate dynamically
+    # Coerce metric to numeric and drop invalid rows
+    df["metric"] = pd.to_numeric(df["metric"], errors="coerce")
+    df = df.dropna(subset=["metric"]) 
+
     daily_df = (
         df.groupby("date", as_index=False)["metric"]
         .sum()
@@ -32,10 +36,15 @@ def analyze_time_series_v3(df: pd.DataFrame):
     )
 
     if len(daily_df) < 2:
-        raise ValueError("Not enough data points for trend analysis")
+        return {"error": "Not enough data points for trend analysis"}
 
     x = np.arange(len(daily_df))
     y = daily_df["metric"].values.astype(float)
+
+    # Remove NaNs/Infs from y
+    y = y[np.isfinite(y)]
+    if len(y) < 2:
+        return {"error": "Not enough valid numeric data points after removing NaN/Inf"}
 
     # 🔹 Linear regression
     slope, intercept = np.polyfit(x, y, 1)

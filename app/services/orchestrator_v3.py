@@ -1,5 +1,7 @@
 import time
+import math
 from typing import Dict, Any
+import numpy as np
 
 from app.services.ingestion import ingest_from_source
 from app.services.normalization import normalize_dataset
@@ -68,8 +70,7 @@ def run_v3_pipeline(request) -> Dict[str, Any]:
     )
 
     execution_time_ms = round((time.time() - start_time) * 1000, 2)
-
-    return {
+    result = {
         "version": "v3",
         "dataset_type": dataset_type,
         "metrics_analyzed": request.metric_columns,
@@ -77,3 +78,24 @@ def run_v3_pipeline(request) -> Dict[str, Any]:
         "executive_summary": executive_summary,
         "execution_time_ms": execution_time_ms
     }
+
+    # Recursive sanitizer to replace NaN/Inf (which json.dumps rejects) with None
+    def sanitize(obj):
+        if isinstance(obj, float):
+            if not math.isfinite(obj):
+                return None
+            return obj
+        if isinstance(obj, (np.floating, np.integer)):
+            val = obj.item()
+            if isinstance(val, float) and not math.isfinite(val):
+                return None
+            return val
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [sanitize(v) for v in obj]
+        if isinstance(obj, tuple):
+            return tuple(sanitize(v) for v in obj)
+        return obj
+
+    return sanitize(result)
